@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <title>Todo App</title>
+    </head>
+    <body>
+        <style>
+            .hidden{
+                display: none;
+            }
+        </style>
+        <form id="form">
+            <div>
+                <label for="item">I need to:</label>
+                <input type="text" name="description">
+            </div>
+            <div>
+                <input type="submit" value="Create">
+            </div>
+        </form>
+        <div id="error" class="hidden">Something went wrong!</div>
+        <ul>
+            {% for d in data %}
+            <li>{{ d.description }}</li>
+            {% endfor %}
+        </ul>
+        <script>
+            // select the onsubmit handler from the form
+            document.getElementById('form').onsubmit = function(e) {
+                // stops the default behavior
+                e.preventDefault();
+                fetch('/todos/create', {
+                    method: 'POST',
+                    // body is whatever the user has typed into the description field
+                    body: JSON.stringify({
+                        'description': document.getElementById('description').value
+                    }),
+                    // let the server know you're sending JSON
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                // configuring the server for a JSON response so it can parse it properly
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(jsonRespose) {
+                    console.log(jsonResponse);
+                    // create a list item
+                    const liItem = document.createElement('LI');
+                    liItem.innerHTML = jsonResponse['description'];
+                    document.getElementById('todos').appendChild(liItem);
+                    // keep the error message hidden because nothing went wrong
+                    document.getElementById('error').className = 'hidden';
+                })
+                // if something goes wrong, display the error by removing the "hidden" classname from the error
+                .catch(function() {
+                    document.getElementById('error').className = '';
+                })
+            }
+        </script>
+    </body>
+</html>
