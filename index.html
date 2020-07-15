@@ -7,24 +7,62 @@
             .hidden{
                 display: none;
             }
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
         </style>
         <form id="form">
             <div>
                 <label for="item">I need to:</label>
-                <input type="text" name="description">
+                <input type="text" name="description" id="description">
             </div>
             <div>
                 <input type="submit" value="Create">
             </div>
         </form>
         <div id="error" class="hidden">Something went wrong!</div>
-        <ul>
+        <ul id="todos">
             {% for d in data %}
-            <li>{{ d.description }}</li>
+            <li><input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked {% endif %}> {{ d.description }}</li>
             {% endfor %}
         </ul>
         <script>
-            // select the onsubmit handler from the form
+            // querySelectorAll returns an array-like list that we can iterate over
+            const checkboxes = document.querySelectorAll('.check-completed');
+            
+            // FOR THE CHECKBOX NEXT TO EACH TODO ITEM
+            // iterate over the array (looking for checkboxes that have become checked?)
+            // JS takes for loops the same way C does, but use "let" to init the var
+            for (let i = 0; i < checkboxes.length; i++) {
+                const checkbox = checkboxes[i];
+                checkbox.onchange = function(e) {
+                    console.log('event', e);
+                    const newCompleted = e.target.checked;
+                    // retrieve ID from the item
+                    const todoID = e.target.dataset['id'];
+                    fetch('/todos/' + todoID + '/set-completed', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            'completed': newCompleted
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(function() {
+                        document.getElementById('error').className = 'hidden';
+                    })
+
+                    // error catching
+                    .catch(function() {
+                        console.log()
+                        document.getElementById('error').className = '';
+                    })
+                }
+            }
+            // FOR THE "CREATE" BUTTON TO CREATE TODO ITEMS
             document.getElementById('form').onsubmit = function(e) {
                 // stops the default behavior
                 e.preventDefault();
@@ -39,11 +77,12 @@
                         'Content-Type': 'application/json'
                     }
                 })
+
                 // configuring the server for a JSON response so it can parse it properly
                 .then(function(response) {
                     return response.json();
                 })
-                .then(function(jsonRespose) {
+                .then(function(jsonResponse) {
                     console.log(jsonResponse);
                     // create a list item
                     const liItem = document.createElement('LI');
@@ -54,6 +93,7 @@
                 })
                 // if something goes wrong, display the error by removing the "hidden" classname from the error
                 .catch(function() {
+                    console.log()
                     document.getElementById('error').className = '';
                 })
             }
