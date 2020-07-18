@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+
 <html>
     <head>
         <title>Todo App</title>
@@ -11,6 +13,19 @@
                 list-style: none;
                 padding: 0;
                 margin: 0;
+                width: 200px;
+            }
+            li {
+                clear: both;
+            }
+            li button {
+                -webkit-appearance: none;
+                border: none;
+                outline: none;
+                color: red;
+                float: right;
+                cursor: pointer;
+                font-size: 20px;
             }
         </style>
         <form id="form">
@@ -25,7 +40,10 @@
         <div id="error" class="hidden">Something went wrong!</div>
         <ul id="todos">
             {% for d in data %}
-            <li><input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked {% endif %}> {{ d.description }}</li>
+            <li><input class="check-completed" data-id="{{ d.id }}" 
+                type="checkbox" {% if d.completed %} checked {% endif %}> {{ d.description }}
+                <button class="li button deletebutton" data-id="{{ d.id }}">&cross;</button>  <!-- &cross; is HTML for an X-->
+            </li>
             {% endfor %}
         </ul>
         <script>
@@ -77,6 +95,7 @@
                         'Content-Type': 'application/json'
                     }
                 })
+            
 
                 // configuring the server for a JSON response so it can parse it properly
                 .then(function(response) {
@@ -97,6 +116,22 @@
                     document.getElementById('error').className = '';
                 })
             }
+            // FOR DELETE BUTTON NEXT TO EACH ITEM
+
+                const deletebtns = document.getElementsByClassName('deletebutton');
+            
+                for (let i = 0; i < deletebtns.length; i++) {
+                    const deletebutton = deletebtns[i];
+                    deletebutton.onclick = function(e) {
+                        const todoId = e.target.dataset['id'];
+                        fetch('/todos/' + todoId, {
+                            method: 'DELETE',
+                            });
+                            // reloads the page
+                            location.reload()
+                        }
+                        
+                }
         </script>
     </body>
 </html>
