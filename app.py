@@ -6,8 +6,8 @@ from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://localhost:5432/todoapp'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
 # sets up migration
 migrate = Migrate(app, db)
 
@@ -21,7 +21,7 @@ class Todo(db.Model):
     list_id = db.Column(db.Integer, db.ForeignKey('todolists.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Todo {self.id} {self.description}>'
+        return f'<Todo {self.id} {self.description}, list {self.list_id}>'
 
 # child model
 class TodoList(db.Model):
@@ -70,9 +70,7 @@ def create_todo():
         body['completed'] = todo.completed
         body['description'] = todo.description
 
-        return jsonify({
-            'description': todo.description
-        })
+        return jsonify(body)
     # if there's a problem
     except:
         error = True
@@ -96,6 +94,13 @@ def delete_todo(todo_id):
     db.session.close()
   return jsonify({ 'success': True })
 
-@app.route('/')
+@app.route('/lists/<list_id>')
+def get_list_todos(list_id):
+    return render_template('index.html', 
+     data=Todo.query.filter_by(list_id=list_id).order_by('id').all()
+    )
+
+
+app.route('/')
 def index():
-    return render_template('index.html', data=Todo.query.order_by('id').all())
+    return redirect(url_for('get_list_todos', list_id=1))
